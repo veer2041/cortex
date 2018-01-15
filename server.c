@@ -339,9 +339,9 @@ void clear_sting(unsigned char *str, unsigned int val ){
 void getreply(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
- while (1) 
-  {				/* Loop forever */
-  delay_ms(300);
+ 	while (1) 
+ 	 {				/* Loop forever */
+ 	 delay_ms(300);
 
   	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
@@ -369,22 +369,22 @@ void getreply(){
 		}
 
 
-	if ( UART0Count != 0 )
+/*	if ( UART0Count != 0 )
 	{
-	  LPC_UART1->IER = IER_THRE | IER_RLS;			/* Disable RBR */
+	  LPC_UART1->IER = IER_THRE | IER_RLS;		
 	  UARTSend( 1, (uint8_t *)UART0Buffer, UART0Count );
 	  UART0Count = 0;
-	  LPC_UART1->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */
+	  LPC_UART1->IER = IER_THRE | IER_RLS | IER_RBR;
 	  break;
 	}
 
    	else if ( UART1Count != 0 )
 	{
-	  LPC_UART0->IER = IER_THRE | IER_RLS;			/* Disable RBR */
+	  LPC_UART0->IER = IER_THRE | IER_RLS;		
 	  UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	  UART1Count = 0;
-	  LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */
-	}
+	  LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	
+	}	 */
 /*	else{
 		UARTSend( 0, "no", 3 );
 	}						  */
