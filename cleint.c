@@ -25,7 +25,7 @@ extern volatile uint8_t UART0Buffer[BUFSIZE];
 
 void send_command(unsigned char *data);
 void getreply(void);
-void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),client(),operationmode(),receivedata();
+void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),client(),operationmode(),receivedata(),ledon();
 signed int tp_strcmp( unsigned char *s1, unsigned char *s2);
 unsigned char string_rec[20];
 unsigned char machine_num[50];
@@ -360,6 +360,25 @@ void send_command(unsigned char *data){
 	return;	
 }
 
+void ledon(){
+	unsigned short int i,j;
+	unsigned char data_rcv[3];
+	clear_sting(UART1Buffer,UART1Count);
+
+	senddata();
+
+	while(1)
+    {
+        LPC_GPIO2->FIOSET = 0xffffffff;     // Make all the Port pins as high  
+        delay_ms(100);
+
+        LPC_GPIO2->FIOCLR = 0xffffffff;     // Make all the Port pins as low  
+        delay_ms(100);
+    }
+
+	return;	
+}
+
 void senddata(){
    	unsigned short int i,j;
 	unsigned char data_rcv[3];
@@ -369,7 +388,7 @@ void senddata(){
 	UART1Count=0; 
 //	delay_ms(10000);
 	UARTSend( 0, "sending data", 13);
-	UARTSend( 1, "AT+CIPSEND=0,2\r\n", sizeof("AT+CIPSEND=0,2\r\n"));
+	UARTSend( 1, "AT+CIPSEND=0,7\r\n", sizeof("AT+CIPSEND=0,7\r\n"));
 	delay_ms(100);
 
 
@@ -388,15 +407,14 @@ void senddata(){
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,">")) == 0)
 			{
-				UARTSend( 0, "DATA SENT", 20 );
-				UARTSend( 1, "START\r\n", sizeof("START\r\n"));
-				delay_ms(100);
-				getreply();
+		//		UARTSend( 0, "DATA SENT", 20 );
+				UARTSend( 1, "LED2 ON\r\n", sizeof("LED2 ON\r\n"));
 			}
 		else
 		{
 			UARTSend( 0, "DATA NOT SENT", 9 );
 		}
+	return;
 }
 signed int tp_strcmp( unsigned char *s1, unsigned char *s2)
 	{
