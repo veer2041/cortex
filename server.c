@@ -24,12 +24,12 @@ extern volatile uint32_t UART0Count;
 extern volatile uint8_t UART0Buffer[BUFSIZE];
 
 void send_command(unsigned char *data);
-void getreply(void);
-void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),ledon();
+int getreply(void);
+void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),ledon(),receivedata();
 signed int tp_strcmp( unsigned char *s1, unsigned char *s2);
 unsigned char string_rec[20];
 unsigned char machine_num[50];
-void senddata();
+void senddata(void);
 
 /*****************************************************************************
 **   Main Function  main()
@@ -37,11 +37,10 @@ This program has been test on Keil LPC1700 board.
 *****************************************************************************/
 int main (void)
 {
-	unsigned short int i,j;
-	unsigned char data_rcv[6];
+	unsigned short int i;
 	SystemInit();
-	LPC_PINCON->PINSEL4 = 0x000000;  //Configure the PORT2 Pins as GPIO;
-    LPC_GPIO2->FIODIR = 0xffffffff;  //Configure the PORT2 pins as OUTPUT;
+
+    LPC_GPIO0->FIODIR |= (1<<4); 
  
   	init_esp();
   
@@ -51,60 +50,34 @@ int main (void)
 	UARTSend( 0, "router completed", 15);
 
 
- //	clear_sting(UART0Buffer,UART0Count);
-	 	
-	mux();
+//	mux();
 
- // 	UARTSend( 0, "mux completed", 12);
-//	clear_sting(UART0Buffer,UART0Count);
-  	
+	i=getreply();  	
+
 	delay_ms(100);
 
-	ledon();
-	
-  	while(1)
-	{
-		
-		UART1Count=0; 
-		clear_sting(UART1Buffer,25);
-		clear_sting(string_rec,25);
-	
-		while(UART1Count == 0 );
-		
-		i=0;
-		while(UART1Buffer[0]!='+')
-		{
-			if(UART0Count == 1)
-			{
-				LPC_UART0->IER = IER_THRE | IER_RLS;			/* Disable RBR */
-				string_rec[i++]=UART0Buffer[0];
-				
-				UART0Count=0;
-				LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */	
-			 }				
-		}
-		string_rec[i]='\0';
-		i=0;
-		j=0;
-		
-		while(string_rec[i++]!='T');
+ 		while (1) 
+ 		 {				/* Loop forever */
 
-		while(string_rec[i]!='+')
-		{
-			machine_num[j++]=string_rec[i];
-			i++;
-		}
-		machine_num[j]='\0';	
+		 
 
-		if((tp_strcmp(machine_num,"START")) == 0)
-		{
-			senddata();
-		}	
-		else
-		{
-			UARTSend( 0, "not sent", 4);
-		}
-	}													  
+  			
+
+
+			switch(i) {
+					case 1  :
+										ledon();
+										clear_sting(UART0Buffer,25);
+										getreply();
+										continue;
+   				 							 
+	
+					case 2  :
+										senddata();
+										receivedata();
+										continue;
+						}		
+	}												  
 }
 
 void connectrouter(){
@@ -199,10 +172,6 @@ void mux(){
 	i=0;
 
 	while(UART1Buffer[i++] != 'O');
-//	data_rcv[0]='O';
-//	data_rcv[1]='K';
-//	
-//	data_rcv[2]='\0';
 	i--;
 	for(j=0;j<2;j++)
 	{
@@ -262,22 +231,12 @@ void send_command(unsigned char *data){
 }
 
 void ledon(){
-	unsigned short int i,j;
-	unsigned char data_rcv[3];
+
 	clear_sting(UART1Buffer,UART1Count);
+	UARTSend( 0, "LED1 ON\r\n", sizeof("LED1 ON\r\n"));
 
-	senddata();
-
-	while(1)
-    {
-        LPC_GPIO2->FIOSET = 0xffffffff;     // Make all the Port pins as high  
-        delay_ms(100);
-
-        LPC_GPIO2->FIOCLR = 0xffffffff;     // Make all the Port pins as low  
-        delay_ms(100);
-    }
-
-	return;	
+	LPC_GPIO0->FIOSET |= (1<<4); 
+	return;
 }
 
 void senddata(){
@@ -289,7 +248,7 @@ void senddata(){
 	UART1Count=0; 
 //	delay_ms(10000);
 	UARTSend( 0, "sending data", 13);
-	UARTSend( 1, "AT+CIPSEND=0,7\r\n", sizeof("AT+CIPSEND=0,7\r\n"));
+	UARTSend( 1, "AT+CIPSEND=0,5\r\n", sizeof("AT+CIPSEND=0,5\r\n"));
 	delay_ms(100);
 
 
@@ -309,11 +268,11 @@ void senddata(){
 	if((tp_strcmp((uint8_t *)data_rcv,">")) == 0)
 			{
 		//		UARTSend( 0, "DATA SENT", 20 );
-				UARTSend( 1, "LED1 ON\r\n", sizeof("LED1 ON\r\n"));
+				UARTSend( 1, "START\r\n", sizeof("START\r\n"));
 			}
 		else
 		{
-			UARTSend( 0, "DATA NOT SENT", 9 );
+			UARTSend( 0, "DATA NOT SENT to client", 9 );
 		}
 	return;
 }
@@ -336,62 +295,76 @@ void clear_sting(unsigned char *str, unsigned int val ){
 	 return ;
 }
 
-void getreply(){
+int getreply(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
+	UART0Count=0;
+	clear_sting(UART0Buffer,25);
  	while (1) 
  	 {				/* Loop forever */
  	 delay_ms(300);
 
-  	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+  	UARTSend( 0, (uint8_t *)UART0Buffer, UART0Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'S');
+	while(UART0Buffer[i++] != 'S');
 
 	i--;
-	for(j=0;j<5;j++)
+	for(j=0;j<7;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
-	if((tp_strcmp((uint8_t *)data_rcv,"START")) == 0)
+
+	if((tp_strcmp((uint8_t *)data_rcv,"START:1")) == 0)
 			{
-				UARTSend( 0, "Data Received", 13 );
-		//		senddata();	
-		//		ledon();
-				break;
+		//		UARTSend( 0, "Data Received", 13 );
+				return 1;
+			
 			}
-		else
-		{
-		//	UARTSend( 0, "Data not Received", 20 );
-
-		}
-
-
-/*	if ( UART0Count != 0 )
-	{
-	  LPC_UART1->IER = IER_THRE | IER_RLS;		
-	  UARTSend( 1, (uint8_t *)UART0Buffer, UART0Count );
-	  UART0Count = 0;
-	  LPC_UART1->IER = IER_THRE | IER_RLS | IER_RBR;
-	  break;
-	}
-
-   	else if ( UART1Count != 0 )
-	{
-	  LPC_UART0->IER = IER_THRE | IER_RLS;		
-	  UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
-	  UART1Count = 0;
-	  LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	
-	}	 */
-/*	else{
-		UARTSend( 0, "no", 3 );
-	}						  */
-  }
-  return;
+		else if((tp_strcmp((uint8_t *)data_rcv,"START:2")) == 0)
+			{
+			 	return 2;
+			
+			}
+  	}
 
 }
+
+void receivedata(){
+	unsigned short int i,j;
+	unsigned char data_rcv[6];
+	UART0Count=0;
+	clear_sting(UART0Buffer,50);
+ 	while (1) 
+ 	 {				/* Loop forever */
+ 	 delay_ms(300);
+
+  	UARTSend( 0, (uint8_t *)UART0Buffer, UART0Count );
+	i=0;
+
+	while(UART0Buffer[i++] != 'L');
+
+	i--;
+	for(j=0;j<7;j++)
+	{
+	 	data_rcv[j]= UART0Buffer[i++];
+	}
+	data_rcv[j]='\0';
+	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+
+	if((tp_strcmp((uint8_t *)data_rcv,"LED2 ON")) == 0){
+		   
+		   UARTSend( 0, (uint8_t *)data_rcv, sizeof((uint8_t *)data_rcv) );
+			
+		}
+		
+  	}
+
+}
+
+
 void delay_ms(int a){
 	int i,j;
 	for(i = 0 ; i < a ; i++ )
