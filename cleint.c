@@ -29,7 +29,7 @@ void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_
 signed int tp_strcmp( unsigned char *s1, unsigned char *s2);
 unsigned char string_rec[20];
 unsigned char machine_num[50];
-void senddata();
+void senddata(void);
 
 /*****************************************************************************
 **   Main Function  main()
@@ -37,15 +37,15 @@ This program has been test on Keil LPC1700 board.
 *****************************************************************************/
 int main (void)
 {
-	unsigned short int i,j;
-	unsigned char data_rcv[6];
+//	unsigned short int i,j;
+	LPC_GPIO0->FIODIR |= (1<<4); 
 	SystemInit();
+	
  
-  	init_esp();
-  
+ 	init_esp();
   	UARTSend( 0, "echo completed", 15);
   
- 	connectrouter();
+ //	connectrouter();
 	UARTSend( 0, "router completed", 15);
 	
 	operationmode(); 
@@ -55,49 +55,7 @@ int main (void)
   	
 	delay_ms(100);
 	
-  	while(1)
-	{
-		
-		UART1Count=0; 
-		clear_sting(UART1Buffer,25);
-		clear_sting(string_rec,25);
-	
-		while(UART1Count == 0 );
-		
-		i=0;
-		while(UART1Buffer[0]!='+')
-		{
-			if(UART0Count == 1)
-			{
-				LPC_UART0->IER = IER_THRE | IER_RLS;			/* Disable RBR */
-				string_rec[i++]=UART0Buffer[0];
-				
-				UART0Count=0;
-				LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */	
-			 }				
-		}
-		string_rec[i]='\0';
-		i=0;
-		j=0;
-		
-		while(string_rec[i++]!='T');
-
-		while(string_rec[i]!='+')
-		{
-			machine_num[j++]=string_rec[i];
-			i++;
-		}
-		machine_num[j]='\0';	
-
-		if((tp_strcmp(machine_num,"START")) == 0)
-		{
-			senddata();
-		}	
-		else
-		{
-			UARTSend( 0, "not sent", 4);
-		}
-	}													  
+  									  
 }
 
 void connectrouter(){
@@ -131,8 +89,8 @@ void connectrouter(){
 		{
 			UARTSend( 0, "ROUTER unsuccess", 9 );
 		}
-  	send_command("AT+CIFSR\r\n");
-   	delay_ms(100);
+  //	send_command("AT+CIFSR\r\n");
+  // 	delay_ms(100);
 	return;
 }	
 
@@ -245,7 +203,7 @@ void client(){
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 			{
 				UARTSend( 0, "setted as client", 16 );
-					senddata();	
+				getreply();	
 			}
 		else
 		{
@@ -295,8 +253,6 @@ void mux(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
 	clear_sting(UART1Buffer,UART1Count);
-
-
 	while(UART1Buffer[i++] != 'O');
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
@@ -361,21 +317,8 @@ void send_command(unsigned char *data){
 }
 
 void ledon(){
-	unsigned short int i,j;
-	unsigned char data_rcv[3];
-	clear_sting(UART1Buffer,UART1Count);
 
-	senddata();
-
-	while(1)
-    {
-        LPC_GPIO2->FIOSET = 0xffffffff;     // Make all the Port pins as high  
-        delay_ms(100);
-
-        LPC_GPIO2->FIOCLR = 0xffffffff;     // Make all the Port pins as low  
-        delay_ms(100);
-    }
-
+    LPC_GPIO0->FIOSET |= (1<<4); 
 	return;	
 }
 
@@ -438,54 +381,34 @@ void clear_sting(unsigned char *str, unsigned int val ){
 void getreply(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
- while (1) 
-  {				/* Loop forever */
-  delay_ms(300);
+ 	while (1) 
+		{				/* Loop forever */
+				delay_ms(300);
+				UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+				i=0;
 
-  	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
-	i=0;
+				while(UART1Buffer[i++] != 'S');
 
-	while(UART1Buffer[i++] != 'S');
-
-	i--;
-	for(j=0;j<5;j++)
-	{
-	 	data_rcv[j]= UART1Buffer[i++];
-	}
-	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
-	if((tp_strcmp((uint8_t *)data_rcv,"START")) == 0)
-			{
-				UARTSend( 0, "Data Received", 13 );
-				senddata();	
-				break;
+				i--;
+				for(j=0;j<5;j++)
+				{
+	 				data_rcv[j]= UART1Buffer[i++];
+				}
+				data_rcv[j]='\0';
+				UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+				if((tp_strcmp((uint8_t *)data_rcv,"START")) == 0)
+				{
+			//	UARTSend( 0, "Data Received", 13 );
+					ledon(); 
+					senddata();
+					
+					break;
+				}
+				else
+				{
+					UARTSend( 0, "Data not Received", 20 );
+				}
 			}
-		else
-		{
-			UARTSend( 0, "Data not Received", 20 );
-		}
-
-
-	if ( UART0Count != 0 )
-	{
-	  LPC_UART1->IER = IER_THRE | IER_RLS;			/* Disable RBR */
-	  UARTSend( 1, (uint8_t *)UART0Buffer, UART0Count );
-	  UART0Count = 0;
-	  LPC_UART1->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */
-	  break;
-	}
-
-   	else if ( UART1Count != 0 )
-	{
-	  LPC_UART0->IER = IER_THRE | IER_RLS;			/* Disable RBR */
-	  UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
-	  UART1Count = 0;
-	  LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */
-	}
-/*	else{
-		UARTSend( 0, "no", 3 );
-	}						  */
-  }
   return;
 
 }
