@@ -25,7 +25,7 @@ extern volatile uint8_t UART0Buffer[BUFSIZE];
 
 void send_command(unsigned char *data);
 int getreply(void);
-void delay_ms(int a),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),ledon(),receivedata();
+void delay_ms(int a),mode(),init_esp(),connectrouter(),mux(),server(),senddata(),clear_sting(unsigned char *str, unsigned int val ),ledon(),receivedata();
 signed int tp_strcmp( unsigned char *s1, unsigned char *s2);
 unsigned char string_rec[20];
 unsigned char machine_num[50];
@@ -47,11 +47,18 @@ int main (void)
   	UARTSend( 0, "echo completed", 15);
   
  //	connectrouter();
-	UARTSend( 0, "router completed", 15);
+//	UARTSend( 0, "router completed", 15);
+//	mode();
 
 
-//	mux();
+	mux();
+//	UARTSend( 1, "AT+CIFSR", sizeof("AT+CIFSR"));	
+//	delay_ms(200);
 
+//	server();
+	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+	
+	
 	i=getreply();  	
 
 	delay_ms(100);
@@ -67,8 +74,7 @@ int main (void)
 			switch(i) {
 					case 1  :
 										ledon();
-										clear_sting(UART0Buffer,25);
-										getreply();
+										i=getreply();
 										continue;
    				 							 
 	
@@ -76,7 +82,7 @@ int main (void)
 										senddata();
 										receivedata();
 										continue;
-						}		
+					}		
 	}												  
 }
 
@@ -87,6 +93,7 @@ void connectrouter(){
 //  	unsigned char s;
   	send_command("AT+CWJAP=\"D-Link_DIR-600M\",\"\"\r\n");
   	delay_ms(100);
+
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
@@ -114,7 +121,43 @@ void connectrouter(){
   	send_command("AT+CIFSR\r\n");
    	delay_ms(100);
 	return;
-}								  
+}				
+
+void mode(){
+	unsigned short int i,j;
+	unsigned char data_rcv[3];
+ 
+//  	unsigned char s;
+  	send_command("AT+CWMODE=2");
+	UARTSend( 1, "AT+CWMODE=2", sizeof("AT+CWMODE=2"));	
+  	delay_ms(100);
+	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+	i=0;
+
+	while(UART1Buffer[i++] != 'O');
+//	data_rcv[0]='O';
+//	data_rcv[1]='K';
+//	
+//	data_rcv[2]='\0';
+	i--;
+	for(j=0;j<2;j++)
+	{
+	 	data_rcv[j]= UART1Buffer[i++];
+	}
+	data_rcv[j]='\0';
+	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
+			{
+				UARTSend( 0, "SERVER", 7 );
+				//	server();	
+			}
+		else
+		{
+			UARTSend( 0, "FAILED AS SERVER", 15 );
+		}
+   
+	return;
+}								  				  
 
 void init_esp(){
 	unsigned short int i,j;
@@ -186,7 +229,7 @@ void mux(){
 			}
 		else
 		{
-			UARTSend( 0, "Mux unsuccess", 9 );
+			mux();
 		}
 	return;	
 }
@@ -215,7 +258,7 @@ void server(){
 			{
 				UARTSend( 0, "set as Server completed", 20 );
 				//	return;
-					getreply();	
+				//	getreply();	
 			}
 		else
 		{
@@ -242,20 +285,22 @@ void ledon(){
 void senddata(){
    	unsigned short int i,j;
 	unsigned char data_rcv[3];
-//	clear_sting(UART1Buffer,UART1Count);
-//	clear_sting(string_rec,sizeof(string_rec));
+	delay_ms(200);
+	clear_sting(UART1Buffer,UART1Count);
+	clear_sting(string_rec,sizeof(string_rec));
 
 	UART1Count=0; 
 //	delay_ms(10000);
 	UARTSend( 0, "sending data", 13);
 	UARTSend( 1, "AT+CIPSEND=0,5\r\n", sizeof("AT+CIPSEND=0,5\r\n"));
-	delay_ms(100);
+	delay_ms(200);
 
 
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
 	while(UART1Buffer[i++] != '>');
+	UARTSend( 0, "DATA SEND", 9);
 
 	
 	i--;
@@ -272,7 +317,7 @@ void senddata(){
 			}
 		else
 		{
-			UARTSend( 0, "DATA NOT SENT to client", 9 );
+			UARTSend( 0, "DATA NOT SENT to client", 23 );
 		}
 	return;
 }
@@ -336,20 +381,20 @@ void receivedata(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
 	UART0Count=0;
-	clear_sting(UART0Buffer,50);
+	clear_sting(UART1Buffer,50);
  	while (1) 
  	 {				/* Loop forever */
  	 delay_ms(300);
 
-  	UARTSend( 0, (uint8_t *)UART0Buffer, UART0Count );
+  	UARTSend( 0, (uint8_t *)UART1Buffer, UART0Count );
 	i=0;
 
-	while(UART0Buffer[i++] != 'L');
+	while(UART1Buffer[i++] != 'L');
 
 	i--;
 	for(j=0;j<7;j++)
 	{
-	 	data_rcv[j]= UART0Buffer[i++];
+	 	data_rcv[j]= UART1Buffer[i++];
 	}
 	data_rcv[j]='\0';
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
@@ -357,10 +402,10 @@ void receivedata(){
 	if((tp_strcmp((uint8_t *)data_rcv,"LED2 ON")) == 0){
 		   
 		   UARTSend( 0, (uint8_t *)data_rcv, sizeof((uint8_t *)data_rcv) );
-			
-		}
-		
+			return;	
+		}	
   	}
+	
 
 }
 
