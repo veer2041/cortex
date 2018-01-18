@@ -46,10 +46,10 @@ int main (void)
   	UARTSend( 0, "echo completed", 15);
   
  //	connectrouter();
-	UARTSend( 0, "router completed", 15);
+//	UARTSend( 0, "router completed", 15);
 	
-	operationmode(); 
-	UARTSend( 0, "OPERATION SET AS CLIENT", 15);	
+//	operationmode(); 
+	UARTSend( 0, "OPERATION SET AS CLIENT", 20);	
 //	mux();
 	client();
   	
@@ -63,7 +63,8 @@ void connectrouter(){
 	unsigned char data_rcv[3];
  
 //  	unsigned char s;
-  	send_command("AT+CWJAP=\"D-Link_DIR-600M\",\"\"\r\n");
+  //	send_command("AT+CWJAP=\"\",\"\"\r\n");
+	UARTSend( 1, "AT+CWJAP=\"\",\"\"\r\n", sizeof("ATE0\r\n"));
   	delay_ms(100);
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
@@ -167,7 +168,7 @@ void operationmode(){
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 		{
-			UARTSend( 0, "MODE 1", 5 );
+			UARTSend( 0, "MODE 1", 6 );
 		}
 		else
 		{
@@ -182,8 +183,8 @@ void client(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
 	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CIPSTART=\"TCP\",\"192.168.0.2\",139\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.0.2\",139\r\n"));
-	delay_ms(300);
+	UARTSend( 1, "AT+CIPSTART=\"TCP\",\"192.168.4.1\",\"139\"\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.4.1\",\"139\"\r\n"));
+	delay_ms(500);
 
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
@@ -207,7 +208,8 @@ void client(){
 			}
 		else
 		{
-			UARTSend( 0, "client error", 12 );
+			UARTSend( 0, "server not ready", 12 );
+			client();
 		}
 	return;	
 }
@@ -401,8 +403,8 @@ void getreply(){
 			//	UARTSend( 0, "Data Received", 13 );
 					ledon(); 
 					senddata();
-					
-					break;
+					return;
+				//	break;
 				}
 				else
 				{
