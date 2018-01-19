@@ -45,13 +45,13 @@ int main (void)
  	init_esp();
   	UARTSend( 0, "echo completed", 15);
   
- //	connectrouter();
+//	connectrouter();
 //	UARTSend( 0, "router completed", 15);
 	
-//	operationmode(); 
-	UARTSend( 0, "OPERATION SET AS CLIENT", 20);	
+	operationmode(); 
+//	UARTSend( 0, "OPERATION SET AS CLIENT", 20);	
 //	mux();
-	client();
+//	client();
   	
 	delay_ms(100);
 	
@@ -146,6 +146,7 @@ void init_esp(){
 void operationmode(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
+
 	clear_sting(UART1Buffer,UART1Count);
 	UARTSend( 1, "AT+CWMODE=1\r\n", sizeof("AT+CWMODE=1\r\n"));
 	delay_ms(100);
@@ -169,6 +170,7 @@ void operationmode(){
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 		{
 			UARTSend( 0, "MODE 1", 6 );
+			client();
 		}
 		else
 		{
@@ -182,14 +184,17 @@ void operationmode(){
 void client(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
+	UARTSend( 0, "client",6);
 	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CIPSTART=\"TCP\",\"192.168.4.1\",\"139\"\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.4.1\",\"139\"\r\n"));
-	delay_ms(500);
+	UARTSend( 1, "AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n"));
+	delay_ms(5000);
+	
 
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
 	while(UART1Buffer[i++] != 'O');
+	UARTSend( 0, "client\r\n",6);
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -204,12 +209,18 @@ void client(){
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 			{
 				UARTSend( 0, "setted as client", 16 );
+			//	senddata();
 				getreply();	
 			}
 		else
 		{
-			UARTSend( 0, "server not ready", 12 );
-			client();
+			UARTSend( 0, "server not ready", 15 );
+	//		clear_sting(UART0Buffer,UART0Count);
+		//	senddata();
+		//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+		//	delay_ms(5000);
+		//	client();
+			getreply();
 		}
 	return;	
 }
@@ -333,15 +344,16 @@ void senddata(){
 	UART1Count=0; 
 //	delay_ms(10000);
 	UARTSend( 0, "sending data", 13);
+//	UARTSend( 1, "LED2 ON\r\n", sizeof("LED2 ON\r\n"));
 	UARTSend( 1, "AT+CIPSEND=0,7\r\n", sizeof("AT+CIPSEND=0,7\r\n"));
-	delay_ms(100);
+	delay_ms(300);
 
 
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
 	while(UART1Buffer[i++] != '>');
-
+   	UARTSend( 0, "sending CLIENT", 14);
 	
 	i--;
 	for(j=0;j<1;j++)
@@ -383,6 +395,7 @@ void clear_sting(unsigned char *str, unsigned int val ){
 void getreply(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
+	clear_sting(UART1Buffer,UART1Count);
  	while (1) 
 		{				/* Loop forever */
 				delay_ms(300);
