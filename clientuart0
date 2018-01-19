@@ -43,7 +43,7 @@ int main (void)
 	
  
  	init_esp();
-  	UARTSend( 0, "echo completed", 15);
+  //	UARTSend( 0, "echo completed", 15);
   
 //	connectrouter();
 //	UARTSend( 0, "router completed", 15);
@@ -64,9 +64,9 @@ void connectrouter(){
  
 //  	unsigned char s;
   //	send_command("AT+CWJAP=\"\",\"\"\r\n");
-	UARTSend( 1, "AT+CWJAP=\"\",\"\"\r\n", sizeof("ATE0\r\n"));
+	UARTSend( 0, "AT+CWJAP=\"\",\"\"\r\n", sizeof("ATE0\r\n"));
   	delay_ms(100);
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
 	while(UART1Buffer[i++] != 'O');
@@ -80,15 +80,15 @@ void connectrouter(){
 	 	data_rcv[j]= UART1Buffer[i++];
 	}
 	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+//	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 			{
-				UARTSend( 0, "ROUTER completed", 5 );
+//				UARTSend( 0, "ROUTER completed", 5 );
 				//	server();	
 			}
 		else
 		{
-			UARTSend( 0, "ROUTER unsuccess", 9 );
+//			UARTSend( 0, "ROUTER unsuccess", 9 );
 		}
   //	send_command("AT+CIFSR\r\n");
   // 	delay_ms(100);
@@ -101,25 +101,25 @@ void connectrouter(){
 void init_esp(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
-	clear_sting(UART1Buffer,UART1Count);
+	clear_sting(UART0Buffer,UART0Count);
 	UARTInit(0, 9600); /* uart0 */
-  	UARTInit(1, 9600);	/* baud rate setting for esp */
-   	UARTSend( 0, "wait", 4);
-	UARTSend( 1, "ATE0\r\n", sizeof("ATE0\r\n"));	
+  //	UARTInit(1, 9600);	/* baud rate setting for esp */
+  // 	UARTSend( 0, "wait", 4);
+	UARTSend( 0, "ATE0\r\n", sizeof("ATE0\r\n"));	
  	delay_ms(100);
-	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+	clear_sting(UART0Buffer,UART0Count);
+//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 
-	UARTSend( 1, "AT\r\n", sizeof("AT\r\n"));	
+	UARTSend( 0, "AT\r\n", sizeof("AT\r\n"));	
  	delay_ms(100); 
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 
 
 
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'O');
+	while(UART0Buffer[i++] != 'O');
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -127,19 +127,21 @@ void init_esp(){
 	i--;
 	for(j=0;j<2;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+//	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 		{
-			UARTSend( 0, "Initialiize", 5 );	
+			return;
+		//	UARTSend( 0, "Initialiize", 5 );	
 		}
 		else
-		{
-			UARTSend( 0, "Initialiize unsuccess", 9 );
+		{	
+			return;
+		//	UARTSend( 0, "Initialiize unsuccess", 9 );
 		}
-	return;
+//	return;
 }
 
 
@@ -147,15 +149,15 @@ void operationmode(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
 
-	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CWMODE=1\r\n", sizeof("AT+CWMODE=1\r\n"));
+	clear_sting(UART0Buffer,UART0Count);
+	UARTSend( 0, "AT+CWMODE=1\r\n", sizeof("AT+CWMODE=1\r\n"));
 	delay_ms(100);
 	
 
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART0Buffer, UART1Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'O');
+	while(UART0Buffer[i++] != 'O');
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -163,13 +165,13 @@ void operationmode(){
 	i--;
 	for(j=0;j<2;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+//	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 		{
-			UARTSend( 0, "MODE 1", 6 );
+		//	UARTSend( 0, "MODE 1", 6 );
 			client();
 		}
 		else
@@ -184,17 +186,17 @@ void operationmode(){
 void client(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
-	UARTSend( 0, "client",6);
-	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n"));
+//	UARTSend( 0, "client",6);
+	clear_sting(UART0Buffer,UART0Count);
+	UARTSend( 0, "AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n",sizeof("AT+CIPSTART=\"TCP\",\"192.168.4.1\",139\r\n"));
 	delay_ms(5000);
 	
 
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART1Buffer, UART0Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'O');
-	UARTSend( 0, "client\r\n",6);
+	while(UART0Buffer[i++] != 'O');
+//	UARTSend( 0, "client\r\n",6);
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -202,19 +204,19 @@ void client(){
 	i--;
 	for(j=0;j<2;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+//	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,"OK")) == 0)
 			{
-				UARTSend( 0, "setted as client", 16 );
+		//		UARTSend( 0, "setted as client", 16 );
 			//	senddata();
 				getreply();	
 			}
 		else
 		{
-			UARTSend( 0, "server not ready", 15 );
+	//		UARTSend( 0, "server not ready", 15 );
 	//		clear_sting(UART0Buffer,UART0Count);
 		//	senddata();
 		//	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
@@ -228,15 +230,15 @@ void client(){
 void mux(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
-	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CIPMUX=1\r\n", sizeof("AT+CIPMUX=1\r\n"));
+	clear_sting(UART0Buffer,UART0Count);
+	UARTSend( 0, "AT+CIPMUX=1\r\n", sizeof("AT+CIPMUX=1\r\n"));
 	delay_ms(300);
 	
 
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'O');
+	while(UART0Buffer[i++] != 'O');
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -244,7 +246,7 @@ void mux(){
 	i--;
 	for(j=0;j<2;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
@@ -292,13 +294,13 @@ void mux(){
 void server(){
 	unsigned short int i,j;
 	unsigned char data_rcv[3];
-	clear_sting(UART1Buffer,UART1Count);
-	UARTSend( 1, "AT+CIPSERVER=1,139\r\n", sizeof("AT+CIPSERVER=1,139\r\n"));
+	clear_sting(UART0Buffer,UART0Count);
+	UARTSend( 0, "AT+CIPSERVER=1,139\r\n", sizeof("AT+CIPSERVER=1,139\r\n"));
  	delay_ms(200);
 	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
 	i=0;
 
-	while(UART1Buffer[i++] != 'O');
+	while(UART0Buffer[i++] != 'O');
 //	data_rcv[0]='O';
 //	data_rcv[1]='K';
 //	
@@ -306,7 +308,7 @@ void server(){
 	i--;
 	for(j=0;j<2;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
 	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
@@ -324,48 +326,48 @@ void server(){
 }
 
 void send_command(unsigned char *data){
-	UARTSend( 1, data, sizeof(data) );
+	UARTSend( 0, data, sizeof(data) );
 //	getreply();
 	return;	
 }
 
 void ledon(){
 
-    LPC_GPIO0->FIOSET |= (1<<4); 
+    LPC_GPIO0->FIOSET |= (1<<3); 
 	return;	
 }
 
 void senddata(){
    	unsigned short int i,j;
 	unsigned char data_rcv[3];
-//	clear_sting(UART1Buffer,UART1Count);
-//	clear_sting(string_rec,sizeof(string_rec));
+	clear_sting(UART0Buffer,UART1Count);
+	clear_sting(string_rec,sizeof(string_rec));
 
-	UART1Count=0; 
+	UART0Count=0; 
 //	delay_ms(10000);
-	UARTSend( 0, "sending data", 13);
+//	UARTSend( 0, "sending data", 13);
 //	UARTSend( 1, "LED2 ON\r\n", sizeof("LED2 ON\r\n"));
-	UARTSend( 1, "AT+CIPSEND=0,7\r\n", sizeof("AT+CIPSEND=0,7\r\n"));
+	UARTSend( 0, "AT+CIPSEND=0,7\r\n", sizeof("AT+CIPSEND=0,7\r\n"));
 	delay_ms(300);
 
 
-	UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+//	UARTSend( 0, (uint8_t *)UART0Buffer, UART0Count );
 	i=0;
 
-	while(UART1Buffer[i++] != '>');
-   	UARTSend( 0, "sending CLIENT", 14);
+	while(UART0Buffer[i++] != '>');
+   //	UARTSend( 0, "sending CLIENT", 4);
 	
 	i--;
 	for(j=0;j<1;j++)
 	{
-	 	data_rcv[j]= UART1Buffer[i++];
+	 	data_rcv[j]= UART0Buffer[i++];
 	}
 	data_rcv[j]='\0';
-	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+//	UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 	if((tp_strcmp((uint8_t *)data_rcv,">")) == 0)
 			{
 		//		UARTSend( 0, "DATA SENT", 20 );
-				UARTSend( 1, "LED2 ON\r\n", sizeof("LED2 ON\r\n"));
+				UARTSend( 0, "LED2 ON\r\n", sizeof("LED2 ON\r\n"));
 			}
 		else
 		{
@@ -395,25 +397,26 @@ void clear_sting(unsigned char *str, unsigned int val ){
 void getreply(){
 	unsigned short int i,j;
 	unsigned char data_rcv[6];
-	clear_sting(UART1Buffer,UART1Count);
+	clear_sting(UART0Buffer,UART0Count);
  	while (1) 
 		{				/* Loop forever */
 				delay_ms(300);
-				UARTSend( 0, (uint8_t *)UART1Buffer, UART1Count );
+			//	UARTSend( 0, (uint8_t *)UART0Buffer, UART0Count );
 				i=0;
 
-				while(UART1Buffer[i++] != 'S');
+				while(UART0Buffer[i++] != 'S');
 
 				i--;
 				for(j=0;j<5;j++)
 				{
-	 				data_rcv[j]= UART1Buffer[i++];
-				}
+	 				data_rcv[j]= UART0Buffer[i++];
+				}				 
 				data_rcv[j]='\0';
-				UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
+		//		UARTSend( 0, (uint8_t *)data_rcv, sizeof(data_rcv) );
 				if((tp_strcmp((uint8_t *)data_rcv,"START")) == 0)
 				{
 			//	UARTSend( 0, "Data Received", 13 );
+				//	senddata();
 					ledon(); 
 					senddata();
 					return;
@@ -421,10 +424,11 @@ void getreply(){
 				}
 				else
 				{
-					UARTSend( 0, "Data not Received", 20 );
+					return;
+				//	UARTSend( 0, "Data not Received", 20 );
 				}
 			}
-  return;
+//  return;
 
 }
 void delay_ms(int a){
